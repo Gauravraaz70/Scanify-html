@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Scanify — AI-Powered Health Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --orange:#f97316;--amber:#f59e0b;--cyan:#06b6d4;--purple:#a855f7;
+  --green:#22c55e;--red:#ef4444;
+  --bg:#08090f;
+  --surface:rgba(255,255,255,.06);
+  --surface2:rgba(255,255,255,.10);
+  --border:rgba(255,255,255,.10);
+  --border2:rgba(255,255,255,.20);
+  --text:#f8fafc;
+  --text2:#e2e8f0;
+  --muted:#b0bec5;
+  --dim:#64748b;
+  --ff:'Plus Jakarta Sans',sans-serif;
+  --ff-mono:'JetBrains Mono',monospace;
+  --r-sm:8px;--r-md:12px;--r-lg:18px;--r-xl:24px;--r-pill:999px;
+  --banner-h:40px;--nav-h:64px;
+}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--ff);background:var(--bg);color:var(--text);
+  overflow-x:hidden;line-height:1.6;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+}
+img,svg{display:block;max-width:100%}
+button{font-family:inherit;border:none;background:none;cursor:pointer}
+a{text-decoration:none;color:inherit}
+ul{list-style:none}
+
+/* BACKGROUND */
+.orb{position:fixed;border-radius:50%;pointer-events:none;filter:blur(110px);z-index:0}
+.orb1{width:600px;height:600px;background:radial-gradient(circle,rgba(249,115,22,.14),transparent 70%);top:-20%;left:-10%}
+.orb2{width:700px;height:700px;background:radial-gradient(circle,rgba(6,182,212,.11),transparent 70%);bottom:-25%;right:-10%}
+.orb3{width:300px;height:300px;background:radial-gradient(circle,rgba(168,85,247,.09),transparent 70%);top:40%;left:42%}
+#prog{position:fixed;top:0;left:0;height:2px;width:0;z-index:9990;background:linear-gradient(90deg,var(--orange),var(--cyan));transition:width .1s linear}
+
+/* LAYOUT */
+.wrap{max-width:1200px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+.sp{padding:clamp(64px,9vw,100px) clamp(16px,4vw,40px)}
+
+/* BANNER */
+#banner{
+  position:relative;z-index:200;height:var(--banner-h);
+  background:linear-gradient(90deg,#c2410c,var(--orange) 35%,var(--amber) 65%,#0891b2);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0 16px;
+}
+#banner::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);animation:shimmer 2.8s linear infinite}
+@keyframes shimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+#banner a{
+  position:relative;display:inline-flex;align-items:center;gap:8px;
+  color:#fff;font-family:var(--ff);font-size:13px;font-weight:700;letter-spacing:.02em;white-space:nowrap
+}
+.apk-badge{background:rgba(0,0,0,.25);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--r-pill);letter-spacing:.05em}
+@media(max-width:460px){.apk-extra,.apk-badge{display:none}}
+
+/* HEADER */
+#hdr{position:fixed;top:var(--banner-h);inset-x:0;z-index:100;padding:10px clamp(12px,3vw,24px);transition:top .3s,padding .3s}
+#hdr.scrolled{top:0;padding:0}
+.npill{
+  max-width:1200px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  height:var(--nav-h);padding:0 clamp(16px,3vw,32px);
+  background:rgba(8,9,15,.88);
+  backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);
+  border:1px solid var(--border);border-radius:16px;
+  box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);
+  transition:border-radius .3s
+}
+#hdr.scrolled .npill{border-radius:0 0 16px 16px}
+.logo{font-family:var(--ff-mono);font-size:18px;font-weight:700;letter-spacing:.08em;color:var(--text);flex-shrink:0}
+.logo span{color:var(--orange)}
+.nlinks{display:flex;align-items:center;gap:28px}
+.nlinks a{color:var(--muted);font-size:14px;font-weight:500;transition:color .2s}
+.nlinks a:hover,.nlinks a.active{color:var(--text)}
+.ham{display:none;flex-direction:column;justify-content:center;gap:5px;width:36px;height:36px;padding:6px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);transition:background .2s}
+.ham span{display:block;width:100%;height:1.5px;background:var(--text2);border-radius:2px;transition:transform .3s,opacity .3s,width .3s}
+.ham.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+.ham.open span:nth-child(2){opacity:0;width:0}
+.ham.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+.mmenu{display:none;flex-direction:column;gap:4px;padding:10px 16px 16px;background:rgba(8,9,15,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border);border-top:none;border-radius:0 0 16px 16px;max-width:1200px;margin:0 auto}
+.mmenu.open{display:flex}
+.mmenu a{color:var(--text2);font-size:15px;font-weight:500;padding:10px 12px;border-radius:var(--r-sm);transition:background .2s,color .2s}
+.mmenu a:hover{background:var(--surface2);color:#fff}
+.mmenu .btprimary{margin-top:6px;width:100%;justify-content:center}
+
+/* BUTTONS */
+.btprimary{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:11px 24px;
+  background:linear-gradient(135deg,var(--orange),var(--amber));
+  border-radius:var(--r-pill);
+  font-family:var(--ff);font-size:14px;font-weight:700;color:#020617;
+  transition:transform .2s,box-shadow .2s;
+  box-shadow:0 4px 20px rgba(249,115,22,.4);
+  white-space:nowrap;flex-shrink:0;cursor:pointer
+}
+.btprimary:hover{transform:scale(1.03);box-shadow:0 6px 28px rgba(249,115,22,.6)}
+.btprimary:active{transform:scale(.97)}
+.btghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-pill);font-family:var(--ff);font-size:14px;font-weight:600;color:var(--text);transition:background .2s,border-color .2s;cursor:pointer}
+.btghost:hover{background:var(--surface2);border-color:var(--border2)}
+
+/* SCROLL DOTS */
+#sdots{position:fixed;right:18px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;z-index:80}
+#sdots button{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);border:none;cursor:pointer;transition:background .3s,transform .3s}
+#sdots button.active{background:var(--orange);transform:scale(1.6)}
+@media(max-width:768px){#sdots{display:none}}
+
+/* HERO */
+#hero{
+  position:relative;z-index:10;
+  padding-top:calc(var(--banner-h) + var(--nav-h) + clamp(56px,8vw,100px));
+  padding-bottom:clamp(56px,8vw,96px);
+  padding-left:clamp(16px,4vw,40px);
+  padding-right:clamp(16px,4vw,40px);
+}
+.hgrid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,5vw,72px);align-items:center}
+.hbadge{display:inline-flex;align-items:center;gap:7px;padding:5px 14px;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.28);border-radius:var(--r-pill);font-size:12px;font-weight:600;letter-spacing:.03em;color:var(--orange);margin-bottom:20px}
+.htitle{font-family:var(--ff);font-size:clamp(36px,5vw,64px);font-weight:800;line-height:1.1;letter-spacing:-.02em;margin-bottom:18px;color:var(--text)}
+.htitle .t2{display:block;background:linear-gradient(120deg,#f97316 0%,#f59e0b 50%,#06b6d4 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hdesc{font-size:clamp(15px,2vw,16.5px);color:var(--text2);line-height:1.72;margin-bottom:28px;max-width:460px;font-weight:400}
+.hbtns{display:flex;gap:11px;flex-wrap:wrap;margin-bottom:40px}
+.hbtns .btprimary{padding:13px 28px;font-size:15px}
+.hstats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.hstat-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px}
+.hsval{font-family:var(--ff-mono);font-size:clamp(22px,2.8vw,30px);font-weight:700;color:var(--orange);margin-bottom:4px}
+.hslbl{font-size:12px;color:var(--muted);letter-spacing:.04em;font-weight:500}
+
+/* hero card */
+.hvisual{position:relative}
+.hcard{position:relative;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--r-xl);padding:clamp(20px,3vw,30px);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 0 60px rgba(249,115,22,.06),inset 0 1px 0 rgba(255,255,255,.07)}
+.hrow{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:var(--r-md);border:1px solid var(--border);margin-bottom:10px;transition:background .2s,border-color .2s}
+.hrow:last-child{margin-bottom:0}
+.hrow:hover{background:var(--surface2);border-color:var(--border2)}
+.hico{width:42px;height:42px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.hico.o{background:rgba(249,115,22,.14);border:1px solid rgba(249,115,22,.24)}
+.hico.c{background:rgba(6,182,212,.14);border:1px solid rgba(6,182,212,.24)}
+.hico.p{background:rgba(168,85,247,.14);border:1px solid rgba(168,85,247,.24)}
+.hlbl{font-weight:700;font-size:14px;color:var(--text);margin-bottom:2px}
+.hsub{font-size:12px;color:var(--muted)}
+.chip{position:absolute;background:rgba(8,9,15,.92);border:1px solid var(--border2);border-radius:var(--r-md);padding:8px 13px;font-size:12px;font-weight:600;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;gap:7px;box-shadow:0 8px 24px rgba(0,0,0,.4);white-space:nowrap;color:var(--text2)}
+.chip.ct{top:-16px;right:-8px;animation:fy 3.2s ease-in-out infinite}
+.chip.cb{bottom:14px;left:-12px;animation:fy 3.2s ease-in-out .5s infinite}
+@keyframes fy{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot.g{background:var(--green);box-shadow:0 0 7px var(--green)}
+.dot.o{background:var(--orange);box-shadow:0 0 7px var(--orange)}
+
+/* SECTION HEADERS */
+.eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 13px;border-radius:var(--r-pill);margin-bottom:14px}
+.ey-o{background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.28);color:var(--orange)}
+.ey-c{background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.28);color:var(--cyan)}
+.stitle{font-family:var(--ff);font-size:clamp(28px,4vw,46px);font-weight:800;line-height:1.1;letter-spacing:-.015em;margin-bottom:14px;color:var(--text)}
+.stitle.go{background:linear-gradient(120deg,#f97316,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stitle.gc{background:linear-gradient(120deg,#06b6d4,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sdesc{font-size:clamp(14px,1.8vw,16px);color:var(--text2);line-height:1.72;margin-bottom:24px;font-weight:400}
+.sec-hd{text-align:center;margin-bottom:clamp(36px,5vw,56px)}
+.sec-hd .sdesc{max-width:520px;margin:0 auto 0}
+
+/* FEATURES */
+.fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:1200px;margin:0 auto}
+.fcard{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:clamp(18px,2.5vw,26px);transition:transform .28s,border-color .28s,background .28s,box-shadow .28s;opacity:0;transform:translateY(26px)}
+.fcard.vis{animation:riseUp .55s ease forwards}
+@keyframes riseUp{to{opacity:1;transform:translateY(0)}}
+.fcard:hover{transform:translateY(-5px);border-color:var(--border2);background:var(--surface2);box-shadow:0 16px 40px rgba(0,0,0,.28)}
+.fico{width:46px;height:46px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px}
+.fo{background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.22)}
+.fa{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.22)}
+.fr{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.22)}
+.fc{background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.22)}
+.fp{background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.22)}
+.fg{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.22)}
+.fname{font-weight:700;font-size:15px;color:var(--text);margin-bottom:8px}
+.fdesc{font-size:13.5px;color:var(--text2);line-height:1.65}
+
+/* SPLIT SECTIONS */
+.sgrid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,5vw,68px);align-items:center}
+.cklist{margin-bottom:30px}
+.cklist li{display:flex;align-items:flex-start;gap:10px;font-size:14.5px;color:var(--text2);line-height:1.65;margin-bottom:10px;font-weight:400}
+.cklist li:last-child{margin-bottom:0}
+.ck{width:20px;height:20px;border-radius:50%;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
+.ck.o{background:rgba(249,115,22,.14);color:var(--orange);border:1px solid rgba(249,115,22,.28)}
+.ck.c{background:rgba(6,182,212,.14);color:var(--cyan);border:1px solid rgba(6,182,212,.28)}
+.panel{position:relative;border-radius:var(--r-xl);padding:clamp(20px,3vw,30px);border:1px solid;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.panel.po{background:rgba(249,115,22,.05);border-color:rgba(249,115,22,.18)}
+.panel.pc{background:rgba(6,182,212,.05);border-color:rgba(6,182,212,.18)}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mc{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;transition:background .2s,border-color .2s}
+.mc:hover{background:rgba(255,255,255,.09);border-color:var(--border2)}
+.me{font-size:20px;margin-bottom:6px}
+.mt{font-weight:700;font-size:13px;color:var(--text);margin-bottom:2px}
+.ms{font-size:12px;color:var(--muted);line-height:1.4}
+
+/* STATS */
+.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;max-width:1200px;margin:0 auto 32px}
+.scard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:clamp(18px,2.5vw,26px);text-align:center;transition:transform .28s,box-shadow .28s;opacity:0;transform:translateY(20px)}
+.scard.vis{animation:riseUp .5s ease forwards}
+.scard:hover{transform:translateY(-5px);box-shadow:0 16px 40px rgba(0,0,0,.28)}
+.scico{width:48px;height:48px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 12px}
+.scval{font-family:var(--ff-mono);font-size:clamp(26px,3.2vw,34px);font-weight:700;color:var(--text);margin-bottom:6px}
+.sclbl{font-size:13px;color:var(--muted)}
+.tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:1200px;margin:0 auto}
+.tc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:clamp(18px,2.5vw,26px);transition:border-color .25s,background .25s}
+.tc:hover{border-color:var(--border2);background:var(--surface2)}
+.tico{width:42px;height:42px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.2)}
+.ttl{font-weight:700;font-size:15px;color:var(--text);margin-bottom:8px}
+.tdsc{font-size:13.5px;color:var(--text2);line-height:1.65}
+
+/* CTA */
+.ctabox{max-width:820px;margin:0 auto;position:relative;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:var(--r-xl);padding:clamp(44px,8vw,72px) clamp(22px,5vw,60px);text-align:center;overflow:hidden}
+.corb{position:absolute;border-radius:50%;filter:blur(54px);pointer-events:none}
+.corb1{width:200px;height:200px;background:rgba(249,115,22,.2);top:-60px;left:-60px}
+.corb2{width:200px;height:200px;background:rgba(6,182,212,.16);bottom:-60px;right:-60px}
+.ctatitle{font-family:var(--ff);font-size:clamp(26px,4vw,46px);font-weight:800;line-height:1.12;letter-spacing:-.015em;color:var(--text);margin-bottom:14px}
+.ctasub{font-size:clamp(14px,1.8vw,16px);color:var(--text2);line-height:1.72;max-width:480px;margin:0 auto 30px;font-weight:400}
+.ctabw{display:flex;justify-content:center}
+.ctanote{margin-top:16px;font-size:12px;color:var(--dim);letter-spacing:.02em}
+
+/* DEVELOPER INFO */
+#devinfo{
+  position:relative;z-index:10;
+  padding:clamp(64px,9vw,100px) clamp(16px,4vw,40px);
+}
+.dev-wrap{max-width:600px;margin:0 auto;text-align:center}
+.dev-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-xl);padding:clamp(32px,5vw,52px);
+  position:relative;overflow:hidden;
+}
+.dev-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(249,115,22,.06),transparent 50%,rgba(6,182,212,.06));
+  pointer-events:none;
+}
+.dev-avatar{
+  width:80px;height:80px;border-radius:50%;margin:0 auto 16px;
+  background:linear-gradient(135deg,var(--orange),var(--amber));
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;font-weight:800;color:#020617;
+  border:2px solid rgba(249,115,22,.3);
+}
+.dev-name{font-size:clamp(22px,3vw,28px);font-weight:800;color:var(--text);margin-bottom:6px}
+.dev-role{font-size:14px;color:var(--muted);margin-bottom:28px;font-weight:500}
+.dev-divider{width:40px;height:2px;background:linear-gradient(90deg,var(--orange),var(--amber));margin:0 auto 24px;border-radius:2px}
+.dev-links{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.dev-link{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 18px;
+  background:rgba(255,255,255,.06);
+  border:1px solid var(--border);
+  border-radius:var(--r-pill);
+  font-size:13px;font-weight:600;color:var(--text2);
+  transition:background .2s,border-color .2s,color .2s,transform .2s;
+  text-decoration:none;
+}
+.dev-link:hover{background:var(--surface2);border-color:var(--border2);color:var(--text);transform:translateY(-2px)}
+.dev-link svg{flex-shrink:0}
+.dev-link.ig:hover{border-color:rgba(225,48,108,.4);color:#e1306c}
+.dev-link.li:hover{border-color:rgba(10,102,194,.4);color:#0a66c2}
+.dev-link.gh:hover{border-color:rgba(255,255,255,.3);color:#fff}
+.dev-link.pf:hover{border-color:rgba(249,115,22,.4);color:var(--orange)}
+
+/* FOOTER */
+footer{position:relative;z-index:10;border-top:1px solid var(--border);padding:clamp(44px,6vw,64px) clamp(16px,4vw,40px) clamp(22px,3vw,28px)}
+.ftr{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:clamp(22px,4vw,44px);max-width:1200px;margin:0 auto 32px}
+.fbrand .logo{display:block;margin-bottom:10px;font-size:17px}
+.ftag{font-size:13px;color:var(--muted);line-height:1.66}
+.fcol h4{font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--text2);margin-bottom:12px}
+.fcol a{display:block;color:var(--muted);font-size:13px;margin-bottom:8px;transition:color .2s}
+.fcol a:hover{color:var(--text)}
+.ftbot{max-width:1200px;margin:0 auto;border-top:1px solid var(--border);padding-top:20px;text-align:center;font-size:12px;color:var(--dim);line-height:1.7}
+
+/* RESPONSIVE */
+@media(max-width:1024px){
+  .fgrid{grid-template-columns:repeat(2,1fr)}
+  .statgrid{grid-template-columns:repeat(2,1fr)}
+  .tgrid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:840px){
+  .nlinks,.npill>.btprimary{display:none}
+  .ham{display:flex}
+  .hgrid{grid-template-columns:1fr}
+  .hvisual{order:-1}
+  .hcard{max-width:480px;margin:0 auto}
+  .chip{display:none}
+  .hdesc{max-width:100%}
+  .sgrid{grid-template-columns:1fr;gap:32px}
+  .panel{max-width:520px;margin:0 auto}
+  .ftr{grid-template-columns:1fr 1fr}
+  .fbrand{grid-column:1/-1}
+}
+@media(max-width:580px){
+  .fgrid{grid-template-columns:1fr}
+  .statgrid{grid-template-columns:1fr 1fr;gap:10px}
+  .tgrid{grid-template-columns:1fr}
+  .hstats{grid-template-columns:repeat(3,1fr);gap:10px}
+  .ctabox{padding:36px 18px}
+  .mgrid{grid-template-columns:1fr 1fr}
+  .ftr{grid-template-columns:1fr}
+  .fbrand{grid-column:auto}
+  .dev-links{gap:8px}
+  .dev-link{padding:9px 14px;font-size:12px}
+}
+@media(max-width:380px){
+  .hstats{grid-template-columns:repeat(3,1fr)}
+  .hbtns{flex-direction:column}
+  .hbtns .btprimary,.hbtns .btghost{width:100%;justify-content:center}
+  .statgrid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="prog" aria-hidden="true" role="progressbar"></div>
+<div class="orb orb1" aria-hidden="true"></div>
+<div class="orb orb2" aria-hidden="true"></div>
+<div class="orb orb3" aria-hidden="true"></div>
+
+<nav id="sdots" aria-label="Page sections">
+  <button data-s="hero"     class="active" aria-label="Hero"></button>
+  <button data-s="features" aria-label="Features"></button>
+  <button data-s="food"     aria-label="Food Scanner"></button>
+  <button data-s="medicine" aria-label="Medicine Scanner"></button>
+  <button data-s="stats"    aria-label="Stats"></button>
+  <button data-s="cta"      aria-label="Get Started"></button>
+  <button data-s="devinfo"  aria-label="Developer"></button>
+</nav>
+
+<!-- BANNER -->
+<div id="banner">
+  <a href="#" id="apklink" aria-label="Download Scanify APK v1.1.0 for Android">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V8m0 8-3-3m3 3 3-3M3 17v2a2 2 0 002 2h14a2 2 0 002-2v-2"/></svg>
+    <span>Download Scanify APK</span>
+    <span class="apk-extra"> — Free Android App</span>
+    <span class="apk-badge">v1.1.0</span>
+    <span>→</span>
+  </a>
+</div>
+
+<!-- HEADER -->
+<header id="hdr">
+  <div class="npill">
+    <a href="#hero" class="logo">SCAN<span>IFY</span></a>
+    <nav class="nlinks" aria-label="Main">
+      <a href="#features" data-n="features">Features</a>
+      <a href="#food"     data-n="food">Food</a>
+      <a href="#medicine" data-n="medicine">Medicine</a>
+      <a href="#stats"    data-n="stats">Why Us</a>
+      <a href="#devinfo"  data-n="devinfo">Developer</a>
+    </nav>
+    <a href="#" id="nav-dl" class="btprimary">Download APK</a>
+    <button class="ham" id="hambtn" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="mmenu" id="mmenu" role="navigation" aria-label="Mobile">
+    <a href="#features">Features</a>
+    <a href="#food">Food Scanner</a>
+    <a href="#medicine">Medicine Scanner</a>
+    <a href="#stats">Why Us</a>
+    <a href="#devinfo">Developer</a>
+    <a href="#" id="mob-dl" class="btprimary">Download APK →</a>
+  </div>
+</header>
+
+<main>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hgrid">
+    <div class="hcopy">
+      <div class="hbadge">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        AI-Powered Health Intelligence
+      </div>
+      <h1 class="htitle">
+        Smart Scanning for
+        <span class="t2">Healthier Living</span>
+      </h1>
+      <p class="hdesc">Next-generation AI food and medicine analysis — instant insights, comprehensive nutrition data, and complete privacy protection built in.</p>
+      <div class="hbtns">
+        <a href="#" id="hero-dl" class="btprimary">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V8m0 8-3-3m3 3 3-3M3 17v2a2 2 0 002 2h14a2 2 0 002-2v-2"/></svg>
+          Download Scanify
+        </a>
+        <a href="#features" class="btghost">Learn More</a>
+      </div>
+      <div class="hstats" role="list">
+        <div class="hstat-box" role="listitem"><div class="hsval">99.9%</div><div class="hslbl">Accuracy</div></div>
+        <div class="hstat-box" role="listitem"><div class="hsval">2M+</div><div class="hslbl">Database</div></div>
+        <div class="hstat-box" role="listitem"><div class="hsval">&lt;1s</div><div class="hslbl">Scan Time</div></div>
+      </div>
+    </div>
+    <div class="hvisual">
+      <div class="hcard" id="hcard">
+        <div class="hrow">
+          <div class="hico o" aria-hidden="true">📷</div>
+          <div><div class="hlbl">Food Scanner</div><div class="hsub">Instant nutrition analysis</div></div>
+        </div>
+        <div class="hrow">
+          <div class="hico c" aria-hidden="true">💊</div>
+          <div><div class="hlbl">Medicine Scanner</div><div class="hsub">Safety verification</div></div>
+        </div>
+        <div class="hrow">
+          <div class="hico p" aria-hidden="true">🛡️</div>
+          <div><div class="hlbl">Privacy First</div><div class="hsub">Zero data collection</div></div>
+        </div>
+      </div>
+      <div class="chip ct" aria-hidden="true"><div class="dot g"></div>Live Analysis Active</div>
+      <div class="chip cb" aria-hidden="true"><div class="dot o"></div>2.1M Products</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" class="sp">
+  <div class="wrap">
+    <div class="sec-hd">
+      <h2 class="stitle">Powerful Features</h2>
+      <p class="sdesc">Everything you need for smart nutrition and medication management in one app</p>
+    </div>
+    <div class="fgrid">
+      <article class="fcard" style="--d:0s">
+        <div class="fico fo" aria-hidden="true">📷</div>
+        <h3 class="fname">Smart Recognition</h3>
+        <p class="fdesc">Advanced AI instantly identifies food items and medicine through barcode scanning and visual recognition.</p>
+      </article>
+      <article class="fcard" style="--d:.1s">
+        <div class="fico fa" aria-hidden="true">📊</div>
+        <h3 class="fname">Nutrition Analysis</h3>
+        <p class="fdesc">Comprehensive breakdown of calories, macros, vitamins, minerals, and AI-powered nutritional scores.</p>
+      </article>
+      <article class="fcard" style="--d:.2s">
+        <div class="fico fr" aria-hidden="true">⚠️</div>
+        <h3 class="fname">Allergen Detection</h3>
+        <p class="fdesc">Instant warnings for common allergens with severity ratings and healthier alternative suggestions.</p>
+      </article>
+      <article class="fcard" style="--d:.3s">
+        <div class="fico fc" aria-hidden="true">💊</div>
+        <h3 class="fname">Drug Information</h3>
+        <p class="fdesc">Detailed medication data including dosage guidelines, drug interactions, and side effects explained.</p>
+      </article>
+      <article class="fcard" style="--d:.4s">
+        <div class="fico fp" aria-hidden="true">🛡️</div>
+        <h3 class="fname">Safety Checks</h3>
+        <p class="fdesc">Real-time drug interaction warnings and contraindication alerts to protect your health.</p>
+      </article>
+      <article class="fcard" style="--d:.5s">
+        <div class="fico fg" aria-hidden="true">🔒</div>
+        <h3 class="fname">Privacy Protected</h3>
+        <p class="fdesc">Local-first processing with encrypted transport and absolutely zero personal data stored.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- FOOD -->
+<section id="food" class="sp">
+  <div class="sgrid wrap">
+    <div class="panel po">
+      <div class="mgrid">
+        <div class="mc"><div class="me">🎯</div><div class="mt">Instant Scan</div><div class="ms">Barcode &amp; image recognition</div></div>
+        <div class="mc"><div class="me">📊</div><div class="mt">Deep Analysis</div><div class="ms">Complete nutritional data</div></div>
+        <div class="mc"><div class="me">⚠️</div><div class="mt">Allergen Alert</div><div class="ms">Real-time warnings</div></div>
+        <div class="mc"><div class="me">🥗</div><div class="mt">Health Score</div><div class="ms">AI-powered ratings</div></div>
+        <div class="mc"><div class="me">🔬</div><div class="mt">Ingredients</div><div class="ms">Plain language decoder</div></div>
+        <div class="mc"><div class="me">💚</div><div class="mt">Alternatives</div><div class="ms">Healthier suggestions</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="eyebrow ey-o">📷 Food Intelligence</div>
+      <h2 class="stitle go">Food Scanner</h2>
+      <p class="sdesc">Make informed dietary choices with comprehensive nutritional analysis powered by advanced AI technology.</p>
+      <ul class="cklist" aria-label="Food scanner features">
+        <li><span class="ck o">✓</span>Lightning-fast barcode and image recognition</li>
+        <li><span class="ck o">✓</span>Detailed macronutrients, vitamins, and minerals breakdown</li>
+        <li><span class="ck o">✓</span>Instant allergen detection with severity indicators</li>
+        <li><span class="ck o">✓</span>AI-powered health scoring and dietary recommendations</li>
+        <li><span class="ck o">✓</span>E-number decoder with health impact explanations</li>
+        <li><span class="ck o">✓</span>Personalized alternatives for healthier choices</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- MEDICINE -->
+<section id="medicine" class="sp">
+  <div class="sgrid wrap">
+    <div>
+      <div class="eyebrow ey-c">💊 Medical Intelligence</div>
+      <h2 class="stitle gc">Medicine Scanner</h2>
+      <p class="sdesc">Ensure medication safety with instant pill identification, interaction warnings, and comprehensive drug information.</p>
+      <ul class="cklist" aria-label="Medicine scanner features">
+        <li><span class="ck c">✓</span>Visual pill identification using shape, color, and imprint</li>
+        <li><span class="ck c">✓</span>Quick barcode and QR code scanning for packages</li>
+        <li><span class="ck c">✓</span>Real-time drug interaction and contraindication alerts</li>
+        <li><span class="ck c">✓</span>Dosage verification with timing recommendations</li>
+        <li><span class="ck c">✓</span>Automatic expiry date monitoring and reminders</li>
+        <li><span class="ck c">✓</span>Food-drug interaction warnings and precautions</li>
+      </ul>
+    </div>
+    <div class="panel pc">
+      <div class="mgrid">
+        <div class="mc"><div class="me">💊</div><div class="mt">Pill ID</div><div class="ms">Visual recognition</div></div>
+        <div class="mc"><div class="me">📦</div><div class="mt">Package Scan</div><div class="ms">Barcode &amp; QR codes</div></div>
+        <div class="mc"><div class="me">⚕️</div><div class="mt">Safety Check</div><div class="ms">Interaction warnings</div></div>
+        <div class="mc"><div class="me">💉</div><div class="mt">Dosage Info</div><div class="ms">Timing &amp; amounts</div></div>
+        <div class="mc"><div class="me">🔔</div><div class="mt">Expiry Alert</div><div class="ms">Auto monitoring</div></div>
+        <div class="mc"><div class="me">🛡️</div><div class="mt">Precautions</div><div class="ms">Food interactions</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section id="stats" class="sp">
+  <div class="wrap">
+    <div class="sec-hd">
+      <h2 class="stitle">Why Choose <span style="color:var(--orange)">Scanify?</span></h2>
+      <p class="sdesc">Trusted by thousands for accurate, fast, and completely private health scanning</p>
+    </div>
+    <div class="statgrid">
+      <div class="scard" style="--d:0s">
+        <div class="scico" style="background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.22)" aria-hidden="true">🏆</div>
+        <div class="scval">99.9%</div>
+        <div class="sclbl">Recognition Accuracy</div>
+      </div>
+      <div class="scard" style="--d:.1s">
+        <div class="scico" style="background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.22)" aria-hidden="true">🌍</div>
+        <div class="scval">2M+</div>
+        <div class="sclbl">Product Database</div>
+      </div>
+      <div class="scard" style="--d:.2s">
+        <div class="scico" style="background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.22)" aria-hidden="true">⚡</div>
+        <div class="scval">&lt;1s</div>
+        <div class="sclbl">Average Scan Time</div>
+      </div>
+      <div class="scard" style="--d:.3s">
+        <div class="scico" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.22)" aria-hidden="true">👥</div>
+        <div class="scval">100K+</div>
+        <div class="sclbl">Active Users</div>
+      </div>
+    </div>
+    <div class="tgrid">
+      <div class="tc">
+        <div class="tico" aria-hidden="true">🔒</div>
+        <h3 class="ttl">Privacy First</h3>
+        <p class="tdsc">All processing happens locally on your device. We never store personal health data or scan history.</p>
+      </div>
+      <div class="tc">
+        <div class="tico" aria-hidden="true">🏥</div>
+        <h3 class="ttl">Medical Grade</h3>
+        <p class="tdsc">Our database includes verified information from official sources including FSSAI and CDSCO.</p>
+      </div>
+      <div class="tc">
+        <div class="tico" aria-hidden="true">✅</div>
+        <h3 class="ttl">Always Free</h3>
+        <p class="tdsc">Core features remain free forever. No hidden costs, subscriptions, or premium tiers required.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta" class="sp">
+  <div class="wrap">
+    <div class="ctabox">
+      <div class="corb corb1" aria-hidden="true"></div>
+      <div class="corb corb2" aria-hidden="true"></div>
+      <h2 class="ctatitle">Ready to Start Your Health Journey?</h2>
+      <p class="ctasub">Join thousands of users making smarter food and medicine choices with AI-powered scanning technology.</p>
+      <div class="ctabw">
+        <a href="#" id="cta-dl" class="btprimary" style="padding:14px 32px;font-size:15px">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V8m0 8-3-3m3 3 3-3M3 17v2a2 2 0 002 2h14a2 2 0 002-2v-2"/></svg>
+          Download Scanify
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <p class="ctanote">No credit card required &nbsp;·&nbsp; Free forever &nbsp;·&nbsp; Privacy guaranteed</p>
+    </div>
+  </div>
+</section>
+
+<!-- DEVELOPER INFO -->
+<section id="devinfo">
+  <div class="dev-wrap">
+    <div class="eyebrow ey-o" style="margin-bottom:20px">👨‍💻 Developer Info</div>
+    <div class="dev-card">
+      <div class="dev-avatar">G</div>
+      <h2 class="dev-name">Gaurav Raj</h2>
+      <p class="dev-role">Android Developer &amp; Creator of Scanify</p>
+      <div class="dev-divider"></div>
+      <div class="dev-links">
+
+        <!-- Instagram -->
+        <a href="https://instagram.com/its_gauravraaz" target="_blank" rel="noopener noreferrer" class="dev-link ig" aria-label="Instagram">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+          </svg>
+          Instagram
+        </a>
+
+        <!-- LinkedIn -->
+        <a href="https://linkedin.com/in/gaurav-raj-153538298/" target="_blank" rel="noopener noreferrer" class="dev-link li" aria-label="LinkedIn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
+          </svg>
+          LinkedIn
+        </a>
+
+        <!-- GitHub -->
+        <a href="https://github.com/Gauravraaz70" target="_blank" rel="noopener noreferrer" class="dev-link gh" aria-label="GitHub">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/>
+          </svg>
+          GitHub
+        </a>
+
+        <!-- Portfolio -->
+        <a href="https://gauravraj.me" target="_blank" rel="noopener noreferrer" class="dev-link pf" aria-label="Portfolio">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+          </svg>
+          Portfolio
+        </a>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="ftr">
+    <div class="fbrand">
+      <a href="#hero" class="logo">SCAN<span style="color:var(--orange)">IFY</span></a>
+      <p class="ftag">AI-powered health scanning for smarter, safer living. Your health data stays on your device — always.</p>
+    </div>
+    <div class="fcol">
+      <h4>Product</h4>
+      <a href="#features">Features</a>
+      <a href="#food">Food Scanner</a>
+      <a href="#medicine">Medicine Scanner</a>
+    </div>
+    <div class="fcol">
+      <h4>Company</h4>
+      <a href="#">About Us</a>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+    </div>
+    <div class="fcol">
+      <h4>Connect</h4>
+      <a href="#">Support</a>
+      <a href="#">Contact</a>
+      <a href="#devinfo">Developer</a>
+    </div>
+  </div>
+  <div class="ftbot">
+    <p>© 2026 Scanify · Built with love❤️ in India by Gaurav Raj · All rights reserved.</p>
+    <p>Not a substitute for professional medical advice. Always consult a qualified healthcare professional.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+'use strict';
+
+/* helpers */
+function $(s){ return document.querySelector(s) }
+function $$(s){ return document.querySelectorAll(s) }
+
+/* toast */
+function showToast(msg){
+  var t=document.createElement('div');
+  t.textContent=msg;
+  t.setAttribute('role','alert');
+  var s=t.style;
+  s.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);'+
+    'background:rgba(8,9,15,.96);border:1px solid rgba(249,115,22,.4);color:#f8fafc;'+
+    'font-family:var(--ff);font-size:14px;font-weight:500;padding:13px 22px;'+
+    'border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:9999;'+
+    'opacity:0;transition:opacity .3s,transform .3s;white-space:nowrap;'+
+    'max-width:90vw;text-align:center;';
+  document.body.appendChild(t);
+  requestAnimationFrame(function(){
+    t.style.opacity='1';
+    t.style.transform='translateX(-50%) translateY(0)';
+  });
+  setTimeout(function(){
+    t.style.opacity='0';
+    t.style.transform='translateX(-50%) translateY(16px)';
+    setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t) },350);
+  },3200);
+}
+
+/* APK download — points to public/scanify.apk relative to this HTML file */
+var APK_URL = 'public/scanify.apk';
+
+function triggerDownload(e){
+  if(e){ e.preventDefault(); e.stopPropagation(); }
+  showToast('⬇  Scanify v1.1.0 — download starting…');
+  var a = document.createElement('a');
+  a.href = APK_URL;
+  a.download = 'scanify-v1.1.0.apk';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ document.body.removeChild(a); }, 200);
+}
+
+/* attach download to all download buttons/links */
+['apklink','nav-dl','mob-dl','hero-dl','cta-dl'].forEach(function(id){
+  var el = document.getElementById(id);
+  if(el) el.addEventListener('click', triggerDownload);
+});
+
+/* progress bar */
+var prog=$('#prog');
+function onScroll(){
+  var sy=window.scrollY;
+  var docH=document.documentElement.scrollHeight-window.innerHeight;
+  if(docH>0) prog.style.width=(sy/docH*100)+'%';
+
+  var bannerH=$('#banner') ? $('#banner').offsetHeight : 40;
+  $('#hdr').classList.toggle('scrolled', sy>bannerH+8);
+
+  var SECS=['hero','features','food','medicine','stats','cta','devinfo'];
+  var cur='hero';
+  SECS.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el && el.getBoundingClientRect().top<=130) cur=id;
+  });
+  $$('#sdots button').forEach(function(d){ d.classList.toggle('active',d.dataset.s===cur) });
+  $$('[data-n]').forEach(function(a){ a.classList.toggle('active',a.dataset.n===cur) });
+}
+window.addEventListener('scroll',onScroll,{passive:true});
+onScroll();
+
+/* smooth scroll anchor clicks */
+document.addEventListener('click',function(e){
+  var el=e.target.closest('a[href^="#"]');
+  if(el){
+    var id=el.getAttribute('href').slice(1);
+    if(id){
+      var dest=document.getElementById(id);
+      if(dest){ e.preventDefault(); dest.scrollIntoView({behavior:'smooth'}); }
+    }
+  }
+});
+$$('#sdots button').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var el=document.getElementById(btn.dataset.s);
+    if(el) el.scrollIntoView({behavior:'smooth'});
+  });
+});
+
+/* hamburger */
+var hambtn=$('#hambtn'), mmenu=$('#mmenu');
+hambtn.addEventListener('click',function(){
+  var open=mmenu.classList.toggle('open');
+  hambtn.classList.toggle('open',open);
+  hambtn.setAttribute('aria-expanded',String(open));
+});
+mmenu.querySelectorAll('a,button').forEach(function(el){
+  el.addEventListener('click',function(){
+    mmenu.classList.remove('open');
+    hambtn.classList.remove('open');
+    hambtn.setAttribute('aria-expanded','false');
+  });
+});
+document.addEventListener('click',function(e){
+  if(mmenu.classList.contains('open') && !mmenu.contains(e.target) && !hambtn.contains(e.target)){
+    mmenu.classList.remove('open');
+    hambtn.classList.remove('open');
+    hambtn.setAttribute('aria-expanded','false');
+  }
+});
+
+/* scroll reveal */
+var io=new IntersectionObserver(function(entries){
+  entries.forEach(function(ent){
+    if(ent.isIntersecting){
+      var el=ent.target;
+      var d=el.style.getPropertyValue('--d')||'0s';
+      el.style.animationDelay=d;
+      el.classList.add('vis');
+      io.unobserve(el);
+    }
+  });
+},{threshold:.1});
+$$('.fcard,.scard').forEach(function(el){ io.observe(el) });
+
+/* orb parallax */
+var orb1=$('.orb1'), orb2=$('.orb2');
+window.addEventListener('scroll',function(){
+  var sy=window.scrollY;
+  if(orb1) orb1.style.transform='translate('+(sy*.06)+'px,'+(sy*.09)+'px)';
+  if(orb2) orb2.style.transform='translate('+(-sy*.04)+'px,'+(-sy*.06)+'px)';
+},{passive:true});
+
+})();
+</script>
+</body>
+</html>
